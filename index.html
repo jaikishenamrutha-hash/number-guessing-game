@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Number Guessing Game</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .game-container {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            text-align: center;
+            max-width: 400px;
+        }
+        
+        h1 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+        
+        .instructions {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+        
+        input {
+            width: 100px;
+            padding: 12px;
+            font-size: 18px;
+            border: 2px solid #667eea;
+            border-radius: 8px;
+            text-align: center;
+            margin: 10px;
+        }
+        
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            font-size: 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        
+        button:hover {
+            background: #5568d3;
+        }
+        
+        .message {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: bold;
+            min-height: 24px;
+        }
+        
+        .too-high {
+            background: #ffe0e0;
+            color: #d63031;
+        }
+        
+        .too-low {
+            background: #e0f0ff;
+            color: #0984e3;
+        }
+        
+        .correct {
+            background: #e0ffe0;
+            color: #00b894;
+        }
+        
+        .stats {
+            margin-top: 20px;
+            color: #666;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1>🎲 Number Guessing Game</h1>
+        <p class="instructions">I'm thinking of a number between 1 and 100.<br>Can you guess it?</p>
+        
+        <input type="number" id="guessInput" min="1" max="100" placeholder="Enter number">
+        <br>
+        <button onclick="makeGuess()">Guess!</button>
+        <button onclick="resetGame()">New Game</button>
+        
+        <div id="message" class="message"></div>
+        
+        <div class="stats">
+            <p>Attempts: <span id="attempts">0</span></p>
+        </div>
+    </div>
+
+    <script>
+        // This is where the computer picks a random number
+        let secretNumber = Math.floor(Math.random() * 100) + 1;
+        let attempts = 0;
+        let gameOver = false;
+
+        // This function runs when you click the "Guess!" button
+        function makeGuess() {
+            // Don't allow guessing if game is over
+            if (gameOver) {
+                return;
+            }
+
+            // Get the number the player typed
+            let guess = parseInt(document.getElementById('guessInput').value);
+            let messageElement = document.getElementById('message');
+            
+            // Check if they entered a valid number
+            if (isNaN(guess) || guess < 1 || guess > 100) {
+                messageElement.textContent = 'Please enter a number between 1 and 100!';
+                messageElement.className = 'message';
+                return;
+            }
+            
+            // Count this as an attempt
+            attempts++;
+            document.getElementById('attempts').textContent = attempts;
+            
+            // Check if the guess is correct
+            if (guess === secretNumber) {
+                messageElement.textContent = `🎉 Correct! You got it in ${attempts} attempts!`;
+                messageElement.className = 'message correct';
+                gameOver = true;
+            } else if (guess < secretNumber) {
+                messageElement.textContent = '📈 Too low! Try a higher number.';
+                messageElement.className = 'message too-low';
+            } else {
+                messageElement.textContent = '📉 Too high! Try a lower number.';
+                messageElement.className = 'message too-high';
+            }
+            
+            // Clear the input box
+            document.getElementById('guessInput').value = '';
+        }
+
+        // This function starts a new game
+        function resetGame() {
+            secretNumber = Math.floor(Math.random() * 100) + 1;
+            attempts = 0;
+            gameOver = false;
+            document.getElementById('attempts').textContent = '0';
+            document.getElementById('message').textContent = '';
+            document.getElementById('message').className = 'message';
+            document.getElementById('guessInput').value = '';
+        }
+
+        // Allow pressing Enter to submit guess
+        document.getElementById('guessInput').addEventListener('keypress', function(event) {
+            if (event.key === 'Enter') {
+                makeGuess();
+            }
+        });
+    </script>
+</body>
+</html>
