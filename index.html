@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Number Guessing Game</title>
+    <title>Number Guessing Game - Global Leaderboard</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -15,18 +15,32 @@
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         }
         
-        .game-container {
+        .container {
             background: white;
             padding: 40px;
             border-radius: 20px;
             box-shadow: 0 10px 40px rgba(0,0,0,0.3);
             text-align: center;
-            max-width: 400px;
+            max-width: 450px;
+            min-width: 350px;
+        }
+        
+        .screen {
+            display: none;
+        }
+        
+        .screen.active {
+            display: block;
         }
         
         h1 {
             color: #667eea;
             margin-bottom: 10px;
+        }
+        
+        h2 {
+            color: #667eea;
+            margin-bottom: 20px;
         }
         
         .instructions {
@@ -35,8 +49,9 @@
             font-size: 14px;
         }
         
-        input {
-            width: 100px;
+        input[type="text"],
+        input[type="number"] {
+            width: 200px;
             padding: 12px;
             font-size: 18px;
             border: 2px solid #667eea;
@@ -58,6 +73,19 @@
         
         button:hover {
             background: #5568d3;
+        }
+        
+        button:disabled {
+            background: #95a5a6;
+            cursor: not-allowed;
+        }
+        
+        button.secondary {
+            background: #95a5a6;
+        }
+        
+        button.secondary:hover {
+            background: #7f8c8d;
         }
         
         .message {
@@ -89,58 +117,236 @@
             color: #666;
             font-size: 14px;
         }
+        
+        .leaderboard {
+            margin-top: 20px;
+            text-align: left;
+        }
+        
+        .leaderboard-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px;
+            margin: 8px 0;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+        
+        .leaderboard-item.rank-1 {
+            background: #fff3cd;
+            border-left-color: #ffd700;
+        }
+        
+        .leaderboard-item.rank-2 {
+            background: #e8e8e8;
+            border-left-color: #c0c0c0;
+        }
+        
+        .leaderboard-item.rank-3 {
+            background: #ffe4cc;
+            border-left-color: #cd7f32;
+        }
+        
+        .rank {
+            font-weight: bold;
+            color: #667eea;
+            margin-right: 10px;
+        }
+        
+        .player-name {
+            flex-grow: 1;
+            font-weight: bold;
+        }
+        
+        .score {
+            color: #00b894;
+            font-weight: bold;
+        }
+        
+        .welcome-text {
+            color: #667eea;
+            margin: 20px 0;
+            font-size: 18px;
+        }
+        
+        .no-scores {
+            color: #95a5a6;
+            font-style: italic;
+            padding: 20px;
+        }
+        
+        .loading {
+            color: #667eea;
+            padding: 20px;
+        }
+        
+        .global-badge {
+            display: inline-block;
+            background: #00b894;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            margin-left: 8px;
+        }
     </style>
 </head>
 <body>
-    <div class="game-container">
-        <h1>🎲 Number Guessing Game</h1>
-        <p class="instructions">I'm thinking of a number between 1 and 100.<br>Can you guess it?</p>
-        
-        <input type="number" id="guessInput" min="1" max="100" placeholder="Enter number">
-        <br>
-        <button onclick="makeGuess()">Guess!</button>
-        <button onclick="resetGame()">New Game</button>
-        
-        <div id="message" class="message"></div>
-        
-        <div class="stats">
-            <p>Attempts: <span id="attempts">0</span></p>
+    <div class="container">
+        <!-- Name Entry Screen -->
+        <div id="nameScreen" class="screen active">
+            <h1>🎲 Number Guessing Game</h1>
+            <span class="global-badge">🌍 Global Leaderboard</span>
+            <p class="instructions">Welcome! Enter your name to begin.</p>
+            <input type="text" id="playerName" placeholder="Your name" maxlength="20">
+            <br>
+            <button onclick="startGame()">Start Game</button>
+            <button class="secondary" onclick="showLeaderboard()">View Leaderboard</button>
+        </div>
+
+        <!-- Game Screen -->
+        <div id="gameScreen" class="screen">
+            <h1>🎲 Number Guessing Game</h1>
+            <p class="welcome-text">Good luck, <span id="displayName"></span>!</p>
+            <p class="instructions">I'm thinking of a number between 1 and 100.<br>Can you guess it?</p>
+            
+            <input type="number" id="guessInput" min="1" max="100" placeholder="Enter number">
+            <br>
+            <button onclick="makeGuess()">Guess!</button>
+            <button class="secondary" onclick="quitGame()">Quit</button>
+            
+            <div id="message" class="message"></div>
+            
+            <div class="stats">
+                <p>Attempts: <span id="attempts">0</span></p>
+            </div>
+        </div>
+
+        <!-- Results Screen -->
+        <div id="resultsScreen" class="screen">
+            <h1>🎉 Game Over!</h1>
+            <p class="welcome-text"><span id="resultName"></span></p>
+            <p id="resultMessage" class="instructions"></p>
+            
+            <h2>🏆 Top 5 Global Leaderboard</h2>
+            <div id="leaderboardList" class="leaderboard">
+                <div class="loading">Loading leaderboard...</div>
+            </div>
+            
+            <button onclick="playAgain()">Play Again</button>
+            <button class="secondary" onclick="changePlayer()">Change Player</button>
+        </div>
+
+        <!-- Leaderboard Screen -->
+        <div id="leaderboardScreen" class="screen">
+            <h1>🏆 Global Leaderboard</h1>
+            <span class="global-badge">🌍 Live Updates</span>
+            <p class="instructions">Top 5 Players Worldwide - Fewest Attempts Wins!</p>
+            
+            <div id="fullLeaderboard" class="leaderboard">
+                <div class="loading">Loading leaderboard...</div>
+            </div>
+            
+            <button onclick="backToStart()">Back</button>
         </div>
     </div>
 
-    <script>
-        // This is where the computer picks a random number
-        let secretNumber = Math.floor(Math.random() * 100) + 1;
-        let attempts = 0;
-        let gameOver = false;
+    <!-- Firebase SDK -->
+    <script type="module">
+        // Import Firebase modules
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getFirestore, collection, addDoc, getDocs, query, orderBy, limit, where } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 
-        // This function runs when you click the "Guess!" button
+        // Your Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyC1XnByfFJdzF_fCJn6qFsina5HTv3fNgc",
+            authDomain: "number-guessing-game-8ddbe.firebaseapp.com",
+            projectId: "number-guessing-game-8ddbe",
+            storageBucket: "number-guessing-game-8ddbe.firebasestorage.app",
+            messagingSenderId: "41542691423",
+            appId: "1:41542691423:web:d223805059693cf120c9ea"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // Game variables
+        let secretNumber;
+        let attempts;
+        let gameOver;
+        let currentPlayer;
+
+        // Make functions available globally
+        window.startGame = startGame;
+        window.makeGuess = makeGuess;
+        window.endGame = endGame;
+        window.playAgain = playAgain;
+        window.changePlayer = changePlayer;
+        window.quitGame = quitGame;
+        window.showLeaderboard = showLeaderboard;
+        window.backToStart = backToStart;
+
+        // Show a specific screen
+        function showScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(screen => {
+                screen.classList.remove('active');
+            });
+            document.getElementById(screenId).classList.add('active');
+        }
+
+        // Start the game after entering name
+        function startGame() {
+            const nameInput = document.getElementById('playerName').value.trim();
+            
+            if (nameInput === '') {
+                alert('Please enter your name!');
+                return;
+            }
+            
+            currentPlayer = nameInput;
+            document.getElementById('displayName').textContent = currentPlayer;
+            
+            // Initialize game
+            secretNumber = Math.floor(Math.random() * 100) + 1;
+            attempts = 0;
+            gameOver = false;
+            document.getElementById('attempts').textContent = '0';
+            document.getElementById('message').textContent = '';
+            document.getElementById('message').className = 'message';
+            document.getElementById('guessInput').value = '';
+            
+            showScreen('gameScreen');
+        }
+
+        // Make a guess
         function makeGuess() {
-            // Don't allow guessing if game is over
             if (gameOver) {
                 return;
             }
 
-            // Get the number the player typed
             let guess = parseInt(document.getElementById('guessInput').value);
             let messageElement = document.getElementById('message');
             
-            // Check if they entered a valid number
             if (isNaN(guess) || guess < 1 || guess > 100) {
                 messageElement.textContent = 'Please enter a number between 1 and 100!';
                 messageElement.className = 'message';
                 return;
             }
             
-            // Count this as an attempt
             attempts++;
             document.getElementById('attempts').textContent = attempts;
             
-            // Check if the guess is correct
             if (guess === secretNumber) {
                 messageElement.textContent = `🎉 Correct! You got it in ${attempts} attempts!`;
                 messageElement.className = 'message correct';
                 gameOver = true;
+                
+                // Wait a moment then show results
+                setTimeout(() => {
+                    endGame();
+                }, 1500);
             } else if (guess < secretNumber) {
                 messageElement.textContent = '📈 Too low! Try a higher number.';
                 messageElement.className = 'message too-low';
@@ -149,22 +355,151 @@
                 messageElement.className = 'message too-high';
             }
             
-            // Clear the input box
             document.getElementById('guessInput').value = '';
         }
 
-        // This function starts a new game
-        function resetGame() {
-            secretNumber = Math.floor(Math.random() * 100) + 1;
-            attempts = 0;
-            gameOver = false;
-            document.getElementById('attempts').textContent = '0';
-            document.getElementById('message').textContent = '';
-            document.getElementById('message').className = 'message';
-            document.getElementById('guessInput').value = '';
+        // End game and save to Firebase
+        async function endGame() {
+            try {
+                // Save score to Firebase
+                await saveScore(currentPlayer, attempts);
+                
+                // Show results
+                document.getElementById('resultName').textContent = `Great job, ${currentPlayer}!`;
+                document.getElementById('resultMessage').textContent = `You found the number in ${attempts} attempts!`;
+                
+                // Load and display leaderboard
+                await displayLeaderboard('leaderboardList');
+                showScreen('resultsScreen');
+            } catch (error) {
+                console.error('Error saving score:', error);
+                alert('Error saving your score. Please try again!');
+            }
         }
 
-        // Allow pressing Enter to submit guess
+        // Save score to Firebase
+        async function saveScore(playerName, score) {
+            try {
+                // Check if player already has a better score
+                const scoresRef = collection(db, 'scores');
+                const q = query(scoresRef, where('name', '==', playerName));
+                const querySnapshot = await getDocs(q);
+                
+                let shouldSave = true;
+                let existingDocId = null;
+                
+                querySnapshot.forEach((doc) => {
+                    const existingScore = doc.data().score;
+                    if (existingScore <= score) {
+                        shouldSave = false;
+                    } else {
+                        existingDocId = doc.id;
+                    }
+                });
+                
+                if (shouldSave) {
+                    // Save new score
+                    await addDoc(collection(db, 'scores'), {
+                        name: playerName,
+                        score: score,
+                        timestamp: new Date()
+                    });
+                    console.log('Score saved successfully!');
+                }
+            } catch (error) {
+                console.error('Error saving score:', error);
+                throw error;
+            }
+        }
+
+        // Display leaderboard from Firebase
+        async function displayLeaderboard(elementId) {
+            const container = document.getElementById(elementId);
+            container.innerHTML = '<div class="loading">Loading leaderboard...</div>';
+            
+            try {
+                // Get top 5 scores from Firebase
+                const scoresRef = collection(db, 'scores');
+                const q = query(scoresRef, orderBy('score', 'asc'), limit(5));
+                const querySnapshot = await getDocs(q);
+                
+                if (querySnapshot.empty) {
+                    container.innerHTML = '<div class="no-scores">No scores yet. Be the first to play!</div>';
+                    return;
+                }
+                
+                // Group by player name and keep best score
+                const playerScores = {};
+                querySnapshot.forEach((doc) => {
+                    const data = doc.data();
+                    if (!playerScores[data.name] || data.score < playerScores[data.name]) {
+                        playerScores[data.name] = data.score;
+                    }
+                });
+                
+                // Convert to array and sort
+                const leaderboard = Object.entries(playerScores)
+                    .map(([name, score]) => ({ name, score }))
+                    .sort((a, b) => a.score - b.score)
+                    .slice(0, 5);
+                
+                // Display leaderboard
+                let html = '';
+                leaderboard.forEach((entry, index) => {
+                    const rank = index + 1;
+                    const rankClass = `rank-${rank}`;
+                    const medal = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : '';
+                    
+                    html += `
+                        <div class="leaderboard-item ${rankClass}">
+                            <span class="rank">${medal} #${rank}</span>
+                            <span class="player-name">${entry.name}</span>
+                            <span class="score">${entry.score} attempts</span>
+                        </div>
+                    `;
+                });
+                
+                container.innerHTML = html;
+            } catch (error) {
+                console.error('Error loading leaderboard:', error);
+                container.innerHTML = '<div class="no-scores">Error loading leaderboard. Please refresh!</div>';
+            }
+        }
+
+        // Play again with same player
+        function playAgain() {
+            startGame();
+        }
+
+        // Change player (back to name screen)
+        function changePlayer() {
+            document.getElementById('playerName').value = '';
+            showScreen('nameScreen');
+        }
+
+        // Quit game early
+        function quitGame() {
+            showScreen('nameScreen');
+        }
+
+        // Show leaderboard from start screen
+        async function showLeaderboard() {
+            await displayLeaderboard('fullLeaderboard');
+            showScreen('leaderboardScreen');
+        }
+
+        // Back to start
+        function backToStart() {
+            showScreen('nameScreen');
+        }
+
+        // Allow pressing Enter to submit
+        document.getElementById('playerName').addEventListener('keypress', function(event) {
+            if (event.key === 'Enter') {
+                startGame();
+            }
+        });
+
         document.getElementById('guessInput').addEventListener('keypress', function(event) {
             if (event.key === 'Enter') {
                 makeGuess();
